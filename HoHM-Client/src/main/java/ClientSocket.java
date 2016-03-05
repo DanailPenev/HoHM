@@ -1,4 +1,3 @@
-
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -18,10 +17,12 @@ import java.util.concurrent.TimeUnit;
 public class ClientSocket {
     private final CountDownLatch closeLatch;
     private String username;
+    private Main main;
     @SuppressWarnings("unused")
     private Session session;
 
-    public ClientSocket(String username) {
+    public ClientSocket(String username, Main main) {
+        this.main = main;
         this.username = username;
         this.closeLatch = new CountDownLatch(1);
     }
@@ -31,7 +32,7 @@ public class ClientSocket {
     }
 
     @OnWebSocketClose
-    public void onClose(int statusCode, String reason) {
+    public void onClose(int statusCode, String reason) throws IOException {
         System.out.printf("Connection closed: %d - %s%n", statusCode, reason);
         this.session = null;
         this.closeLatch.countDown();
@@ -54,8 +55,34 @@ public class ClientSocket {
 
     @OnWebSocketMessage
     public void onMessage(String msg) {
+        if(msg.substring(0,5).equals("ENTR:")){
+            String newPlayer = msg.substring(5);
+            main.notifyHostClientEntered(newPlayer);
+            return;
+        }
+        if(msg.substring(0,5).equals("LEFT:")){
+            String otherPlayer = msg.substring(5);
+            main.notifyHostClientLeft(otherPlayer);
+
+        }
+        if(msg.substring(0,5).equals("EXEC:")){
+            main.notifyClientGameStart();
+        }
+        if(msg.substring(0,5).equals("LINE:")){
+            String number = msg.substring(5);
+            Integer lineNumber = Integer.parseInt(number);
+            main.getInjected(lineNumber);
+        }
+//        if(msg.substring(0,5).equals("STRT:")){
+//            main.notifyClient();
+//        }
+
+
+
         System.out.printf("Got msg: %s%n", msg);
     }
+
+
 
     public void broadcastMessage(String message) throws IOException {
         session.getRemote().sendString(message);

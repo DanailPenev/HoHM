@@ -50,7 +50,7 @@ public class SocketHandler {
     }
 
     @OnWebSocketMessage
-    public void onMessage(Session user, String message) {
+    public void onMessage(Session user, String message){
         System.out.println("Message:" + message);
         String messageKey = message.substring(0,5);
         //handler for setting username
@@ -82,6 +82,7 @@ public class SocketHandler {
             String lobbyName = message.substring(5);
             if(!lobbyName.equals("")){
                 for (Lobby l : Game.activeLobbies){
+                    try{
                     for (Session s : l.getPlayers()){
                         if (user.equals(s)){
                             l.removePlayer(user);
@@ -91,6 +92,8 @@ public class SocketHandler {
                     if (l.getPlayers().size()<2) {
                         broadcastMessageTo(l.getPlayers().get(0), "VICT:");
                         Game.endGame(lobbyName);
+                    }} catch (Exception e){
+                        System.out.println("LOSHO");
                     }
                 }
             }

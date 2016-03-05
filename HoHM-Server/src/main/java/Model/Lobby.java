@@ -31,6 +31,12 @@ public class Lobby {
         ++idCounter;
     }
 
+    public Lobby(String lobbyName, String idLobby, ArrayList<Session> players){
+        this.lobbyName = lobbyName;
+        this.idLobby = idLobby;
+        this.players = players;
+    }
+
     public static Lobby tryToConnect(String lobbyName){
         Lobby connectedTo = null;
         for (Lobby l : ServerController.availableLobbies){
@@ -78,8 +84,6 @@ public class Lobby {
     public String getId() {
         return idLobby;
     }
-
-
 
 }
 

@@ -85,7 +85,11 @@ public class ClientSocket {
 
 
     public void broadcastMessage(String message) throws IOException {
-        session.getRemote().sendString(message);
+        try{
+            session.getRemote().sendString(message);
+        }catch(Exception e){
+
+        }
 
     }
 

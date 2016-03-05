@@ -12,14 +12,15 @@ import java.util.Map;
  */
 public class Game {
 
-    public static Map<String, ArrayList<Session>> lobby_participants = new HashMap<String, ArrayList<Session>>();
+//    public static Map<String, ArrayList<Session>> lobby_participants = new HashMap<String, ArrayList<Session>>();
+    public static ArrayList<Lobby> activeLobbies = new ArrayList<Lobby>();
 
     public static void startGame(String lobbyName){
         Lobby lobby = Lobby.findLobbyByName(lobbyName);
 
         if(lobby != null){
             ServerController.availableLobbies.remove(lobby);
-            lobby_participants.put(lobby.getId(),lobby.getPlayers() );
+            activeLobbies.add(lobby);
         } else {
             System.out.println("Gre6ka s imeto na lobyto pri startGame");
         }
@@ -29,7 +30,7 @@ public class Game {
         Lobby lobby = Lobby.findLobbyByName(lobbyName);
 
         if(lobby!=null){
-            lobby_participants.remove(lobby);
+            activeLobbies.remove(lobby);
         } else {
             System.out.println("Gre6ka s imeto na lobyto pri endGame");
         }

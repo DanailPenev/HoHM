@@ -39,7 +39,7 @@ public class SocketHandler {
             if (l.getPlayers().remove(user)){
 //                l.removePlayer(user);
                 System.out.println(l.getPlayers().size());
-                broadcastToAllInALobby(l.getId(),"LEFT:"+HoHMSocket.connectedPlayers.get(user));
+                broadcastToAll(l.getId(),"LEFT:"+HoHMSocket.connectedPlayers.get(user));
                 if (l.getPlayers().size()<1){
                     ServerController.availableLobbies.remove(l);
                 }
@@ -71,16 +71,28 @@ public class SocketHandler {
         //handler for starting a game/lobby
         else if(messageKey.equals("STRT:")){
             String lobbyName = message.substring(5);
-            if(!lobbyName.equals("")){
+            String lobbyID = Lobby.findLobbyByName(lobbyName).getId();
+            if(!lobbyName.equals("") && lobbyName != null){
+                broadcastToAllInALobby(user, lobbyID, "EXEC:");
                 Game.startGame(lobbyName);
-                broadcastToAllInALobby(user, Lobby.findLobbyByName(lobbyName).getId(), "EXEC:");
             }
         }
         //handler for ending the game
         else if (messageKey.equals("ENDG:")){
             String lobbyName = message.substring(5);
             if(!lobbyName.equals("")){
-                Game.endGame(lobbyName);
+                for (Lobby l : Game.activeLobbies){
+                    for (Session s : l.getPlayers()){
+                        if (user.equals(s)){
+                            l.removePlayer(user);
+                            System.out.println(l.getPlayers().size());
+                        }
+                    }
+                    if (l.getPlayers().size()<2) {
+                        broadcastMessageTo(l.getPlayers().get(0), "VICT:");
+                        Game.endGame(lobbyName);
+                    }
+                }
             }
         }
         //handler for connecting to a lobby
@@ -142,7 +154,7 @@ public class SocketHandler {
         }
     }
 
-    private void broadcastToAllInALobby(String lobbyID, String message){
+    private void broadcastToAll(String lobbyID, String message){
         Lobby broadcastTo = Lobby.findLobbyById(lobbyID);
         if(broadcastTo != null){
             for (Session s : broadcastTo.getPlayers()) {
@@ -158,18 +170,26 @@ public class SocketHandler {
 
     //send an integer to someone random in the lobby. Can't be the sender
     private void sendCodeToOpponent(Session sender, String lobbyName){
-        String lobbyID = Lobby.findLobbyByName(lobbyName).getId();
-
-        for (Session s : Game.lobby_participants.get(lobbyID)){
-            Random rand = new Random();
-            ArrayList<Session> otherPlayers = new ArrayList<Session>();
-            if(!s.equals(sender)){
-                otherPlayers.add(s);
+        Lobby activeLobby = null;
+        for (Lobby l : Game.activeLobbies) {
+            if (l.getLobbyName().equals(lobbyName)) {
+                activeLobby = l;
             }
+        }
+        if(activeLobby != null){
+            ArrayList<Session> otherPlayers = new ArrayList<Session>();
+            for (Session s : activeLobby.getPlayers()){
+                if(!s.equals(sender)){
+                    otherPlayers.add(s);
+                }
+            }
+            Random rand = new Random();
             int randomIndex = rand.nextInt(otherPlayers.size());
             Session receiver = otherPlayers.get(randomIndex);
             String toSend = "LINE:" + rand.nextInt(ServerController.linesSize);
             broadcastMessageTo(receiver, toSend);
+        } else{
+            System.out.println("active lobby e ta6a4e");
         }
     }
 

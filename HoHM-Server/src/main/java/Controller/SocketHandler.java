@@ -20,6 +20,10 @@ import java.util.Random;
 @WebSocket
 public class SocketHandler {
 
+    private final String defaultUserName = "Anonymous";
+    private int counter = 0;
+    private String sendEnteredKeyword = "ENTR:", sendDCedKeyword="DISC:";
+
     @OnWebSocketConnect
     public void onConnect(Session user) throws Exception {
         System.out.println("Connected user, brat");
@@ -39,7 +43,11 @@ public class SocketHandler {
         String messageKey = message.substring(0,5);
         //handler for setting username
         if(messageKey.equals("NAME:")){
-            HoHMSocket.connectedPlayers.put(user, message.substring(5));
+            String userName = message.substring(5);
+            if (userName.equals("")) {
+                userName = defaultUserName + ++counter;
+            }
+            HoHMSocket.connectedPlayers.put(user, userName);
         }
         //handler for creating a lobby
         else if(messageKey.equals("CRTL:")){
@@ -68,7 +76,7 @@ public class SocketHandler {
             if (connectedTo != null) {
                 connectedTo.addPlayer(user);
                 String userName = HoHMSocket.connectedPlayers.get(user);
-                String messageToSend = userName + " entered the lobby!";
+                String messageToSend = sendEnteredKeyword+userName;
                 broadcastToAllInALobby(user, connectedTo.getId(), messageToSend);
             }
         }
@@ -79,10 +87,10 @@ public class SocketHandler {
             if (disconnectFrom != null) {
                 disconnectFrom.removePlayer(user);
                 String userName = HoHMSocket.connectedPlayers.get(user);
-                String messageToSend = userName + " disconnected from the lobby!";
+                String messageToSend = sendDCedKeyword+userName;
                 if(disconnectFrom.getPlayers().size() > 0){
                     broadcastToAllInALobby(user, disconnectFrom.getId(), messageToSend);
-                } else{
+                } else {
                     ServerController.availableLobbies.remove(disconnectFrom);
                 }
             }
@@ -94,6 +102,7 @@ public class SocketHandler {
         }
     }
 
+    //broadcast to a specific user
     private void broadcastMessageTo(Session receiver, String message){
         try {
             receiver.getRemote().sendString(message);
@@ -102,6 +111,7 @@ public class SocketHandler {
         }
     }
 
+    //broadcast to everyone in the lobby except for the sender
     private void broadcastToAllInALobby(Session sender, String lobbyID, String message){
         for (Session s : HoHMSocket.connectedPlayers.keySet()){
             try {
@@ -115,6 +125,7 @@ public class SocketHandler {
         }
     }
 
+    //send an integer to someone random in the lobby. Can't be the sender
     private void sendCodeToOpponent(Session sender, String lobbyName){
         String lobbyID = Game.getLobby(lobbyName).getId();
 

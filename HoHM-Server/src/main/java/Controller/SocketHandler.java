@@ -67,7 +67,20 @@ public class SocketHandler {
             Lobby connectedTo = Lobby.tryToConnect(lobbyToConnectName);
             if (connectedTo != null) {
                 connectedTo.addPlayer(user);
-                broadcastToAllInALobby(user, connectedTo.getId());
+                String userName = HoHMSocket.connectedPlayers.get(user);
+                String messageToSend = userName + " entered the lobby!";
+                broadcastToAllInALobby(user, connectedTo.getId(), messageToSend);
+            }
+        }
+        //handler for disconnecting from the lobby
+        else if(messageKey.equals("DISC:")){
+            String lobbyToDisconnectName = message.substring(5);
+            Lobby disconnectFrom = Game.getLobby(lobbyToDisconnectName);
+            if (disconnectFrom != null) {
+                disconnectFrom.removePlayer(user);
+                String userName = HoHMSocket.connectedPlayers.get(user);
+                String messageToSend = userName + " disconnected from the lobby!";
+                broadcastToAllInALobby(user, disconnectFrom.getId(), messageToSend);
             }
         }
         //handler for sending lines over to the opponent
@@ -85,15 +98,14 @@ public class SocketHandler {
         }
     }
 
-    private void broadcastToAllInALobby(Session sender, String lobbyID){
-        String userName = HoHMSocket.connectedPlayers.get(sender);
+    private void broadcastToAllInALobby(Session sender, String lobbyID, String message){
         for (Session s : HoHMSocket.connectedPlayers.keySet()){
             try {
                 if(!s.equals(sender)){
-                    s.getRemote().sendString(userName + " entered the lobby!");
+                    s.getRemote().sendString(message);
                 }
             } catch (IOException e) {
-                System.out.println("Problem pri pra6taneto pri wlizane na 4owek");
+                System.out.println("Problem pri pra6taneto na wsi4ki w lobito");
                 e.printStackTrace();
             }
         }
@@ -103,11 +115,11 @@ public class SocketHandler {
         String lobbyID = Game.getLobby(lobbyName).getId();
 
         for (Session s : Game.lobby_participants.get(lobbyID)){
-                Random rand = new Random();
-                ArrayList<Session> otherPlayers = new ArrayList<Session>();
-                if(!s.equals(sender)){
-                    otherPlayers.add(s);
-                }
+            Random rand = new Random();
+            ArrayList<Session> otherPlayers = new ArrayList<Session>();
+            if(!s.equals(sender)){
+                otherPlayers.add(s);
+            }
             int randomIndex = rand.nextInt(otherPlayers.size());
             Session receiver = otherPlayers.get(randomIndex);
             String toSend = rand.nextInt(ServerController.linesSize) + "";

@@ -31,8 +31,22 @@ public class Lobby {
         ++idCounter;
     }
 
+    public static Lobby tryToConnect(String lobbyName){
+        Lobby connectedTo = null;
+        for (Lobby l : ServerController.availableLobbies){
+            if (l.getLobbyName().equals(lobbyName)){
+                connectedTo = l;
+            }
+        }
+        return connectedTo;
+    }
+
     public void addPlayer(Session sender){
         players.add(sender);
+    }
+
+    public void removePlayer(Session sender){
+        players.remove(sender);
     }
 
     public ArrayList<Session> getPlayers(){
@@ -47,15 +61,6 @@ public class Lobby {
         return idLobby;
     }
 
-    public static Lobby tryToConnect(String lobbyName){
-        Lobby connectedTo = null;
-        for (Lobby l : ServerController.availableLobbies){
-            if (l.getLobbyName().equals(lobbyName)){
-                connectedTo = l;
-            }
-        }
-        return connectedTo;
-    }
 
 
 }

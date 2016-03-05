@@ -7,6 +7,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import sun.plugin2.message.GetAppletMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,8 +34,19 @@ public class SocketHandler {
 
     @OnWebSocketClose
     public void onClose(Session user, int statusCode, String reason) {
-        System.out.println("Disconnected user");
+        System.out.println("Disconnected ");
+        for (Lobby l : ServerController.availableLobbies){
+            if (l.getPlayers().remove(user)){
+//                l.removePlayer(user);
+                System.out.println(l.getPlayers().size());
+                broadcastToAllInALobby(l.getId(),"LEFT:"+HoHMSocket.connectedPlayers.get(user));
+                if (l.getPlayers().size()<1){
+                    ServerController.availableLobbies.remove(l);
+                }
+            }
+        }
         HoHMSocket.connectedPlayers.remove(user);
+
     }
 
     @OnWebSocketMessage
@@ -53,6 +65,7 @@ public class SocketHandler {
         else if(messageKey.equals("CRTL:")){
             String host = message.substring(5);
             Lobby newLobby = new Lobby(host);
+            newLobby.addPlayer(user);
             ServerController.availableLobbies.add(newLobby);
         }
         //handler for starting a game/lobby
@@ -60,6 +73,7 @@ public class SocketHandler {
             String lobbyName = message.substring(5);
             if(!lobbyName.equals("")){
                 Game.startGame(lobbyName);
+                broadcastToAllInALobby(user, Lobby.findLobbyByName(lobbyName).getId(), "EXEC:");
             }
         }
         //handler for ending the game
@@ -81,20 +95,20 @@ public class SocketHandler {
             }
         }
         //handler for disconnecting from the lobby
-        else if(messageKey.equals("DISC:")){
-            String lobbyToDisconnectName = message.substring(5);
-            Lobby disconnectFrom = Game.getLobby(lobbyToDisconnectName);
-            if (disconnectFrom != null) {
-                disconnectFrom.removePlayer(user);
-                String userName = HoHMSocket.connectedPlayers.get(user);
-                String messageToSend = sendDCedKeyword+userName;
-                if(disconnectFrom.getPlayers().size() > 0){
-                    broadcastToAllInALobby(user, disconnectFrom.getId(), messageToSend);
-                } else {
-                    ServerController.availableLobbies.remove(disconnectFrom);
-                }
-            }
-        }
+//        else if(messageKey.equals("DISC:")){
+//            String lobbyToDisconnectName = message.substring(5);
+//            Lobby disconnectFrom = Game.getLobby(lobbyToDisconnectName);
+//            if (disconnectFrom != null) {
+//                disconnectFrom.removePlayer(user);
+//                String userName = HoHMSocket.connectedPlayers.get(user);
+//                String messageToSend = sendDCedKeyword+userName;
+//                if(disconnectFrom.getPlayers().size() > 0){
+//                    broadcastToAllInALobby(user, disconnectFrom.getId(), messageToSend);
+//                } else {
+//                    ServerController.availableLobbies.remove(disconnectFrom);
+//                }
+//            }
+//        }
         //handler for sending lines over to the opponent
         else if(messageKey.equals("WORD:")){
             String lobbyName = message.substring(5);
@@ -113,21 +127,38 @@ public class SocketHandler {
 
     //broadcast to everyone in the lobby except for the sender
     private void broadcastToAllInALobby(Session sender, String lobbyID, String message){
-        for (Session s : HoHMSocket.connectedPlayers.keySet()){
-            try {
-                if(!s.equals(sender)){
-                    s.getRemote().sendString(message);
+        Lobby broadcastTo = Lobby.findLobbyById(lobbyID);
+        if(broadcastTo != null){
+            for (Session s : broadcastTo.getPlayers()) {
+                try {
+                    if (!s.equals(sender)) {
+                        s.getRemote().sendString(message);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Problem pri pra6taneto na wsi4ki w lobito");
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                System.out.println("Problem pri pra6taneto na wsi4ki w lobito");
-                e.printStackTrace();
+            }
+        }
+    }
+
+    private void broadcastToAllInALobby(String lobbyID, String message){
+        Lobby broadcastTo = Lobby.findLobbyById(lobbyID);
+        if(broadcastTo != null){
+            for (Session s : broadcastTo.getPlayers()) {
+                try {
+                    s.getRemote().sendString(message);
+                } catch (IOException e) {
+                    System.out.println("Problem pri pra6taneto na wsi4ki w lobito");
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     //send an integer to someone random in the lobby. Can't be the sender
     private void sendCodeToOpponent(Session sender, String lobbyName){
-        String lobbyID = Game.getLobby(lobbyName).getId();
+        String lobbyID = Lobby.findLobbyByName(lobbyName).getId();
 
         for (Session s : Game.lobby_participants.get(lobbyID)){
             Random rand = new Random();
@@ -137,7 +168,7 @@ public class SocketHandler {
             }
             int randomIndex = rand.nextInt(otherPlayers.size());
             Session receiver = otherPlayers.get(randomIndex);
-            String toSend = rand.nextInt(ServerController.linesSize) + "";
+            String toSend = "LINE:" + rand.nextInt(ServerController.linesSize);
             broadcastMessageTo(receiver, toSend);
         }
     }

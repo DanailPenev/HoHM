@@ -41,6 +41,24 @@ public class Lobby {
         return connectedTo;
     }
 
+    public static Lobby findLobbyById(String id){
+        for (Lobby l : ServerController.availableLobbies){
+            if(l.getId().equals(id)){
+                return l;
+            }
+        }
+        return null;
+    }
+
+    public static Lobby findLobbyByName(String lobbyName){
+        for(Lobby l : ServerController.availableLobbies){
+            if (l.getLobbyName().equals(lobbyName)){
+                return l;
+            }
+        }
+        return null;
+    }
+
     public void addPlayer(Session sender){
         players.add(sender);
     }

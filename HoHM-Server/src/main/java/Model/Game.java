@@ -15,7 +15,7 @@ public class Game {
     public static Map<String, ArrayList<Session>> lobby_participants = new HashMap<String, ArrayList<Session>>();
 
     public static void startGame(String lobbyName){
-        Lobby lobby = getLobby(lobbyName);
+        Lobby lobby = Lobby.findLobbyByName(lobbyName);
 
         if(lobby != null){
             ServerController.availableLobbies.remove(lobby);
@@ -26,23 +26,13 @@ public class Game {
     }
 
     public static void endGame(String lobbyName){
-        Lobby lobby = getLobby(lobbyName);
+        Lobby lobby = Lobby.findLobbyByName(lobbyName);
 
         if(lobby!=null){
             lobby_participants.remove(lobby);
         } else {
             System.out.println("Gre6ka s imeto na lobyto pri endGame");
         }
-    }
-
-    public static Lobby getLobby(String lobbyName){
-        Lobby lobby = null;
-        for(Lobby l : ServerController.availableLobbies){
-            if (l.getLobbyName().equals(lobbyName)){
-                lobby = l;
-            }
-        }
-        return lobby;
     }
 
 }

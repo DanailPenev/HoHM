@@ -1,3 +1,4 @@
+
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -55,6 +56,10 @@ public class ClientSocket {
 
     @OnWebSocketMessage
     public void onMessage(String msg) {
+        System.out.println(msg);
+        if(msg.equals("VICT:")){
+            main.win();
+        }
         if(msg.substring(0,5).equals("ENTR:")){
             String newPlayer = msg.substring(5);
             main.notifyHostClientEntered(newPlayer);
@@ -73,9 +78,7 @@ public class ClientSocket {
             Integer lineNumber = Integer.parseInt(number);
             main.getInjected(lineNumber);
         }
-//        if(msg.substring(0,5).equals("STRT:")){
-//            main.notifyClient();
-//        }
+
 
 
 
@@ -88,7 +91,7 @@ public class ClientSocket {
         try{
             session.getRemote().sendString(message);
         }catch(Exception e){
-
+            System.out.println("EEEEERROR");
         }
 
     }

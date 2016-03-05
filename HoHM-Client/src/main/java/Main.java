@@ -1,3 +1,4 @@
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -87,7 +88,7 @@ public class Main extends Application {
         GAME_MODE = MAIN_MENU;
 
         Scene scene = new Scene(mainLayout, 300, 590);
-//        scene.getStylesheets().add(getClass().getResource("font.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("font.css").toExternalForm());
 
 
         checkMode();
@@ -98,6 +99,7 @@ public class Main extends Application {
         primaryStage.setResizable(false);
         primaryStage.show();
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
             public void handle(WindowEvent t) {
 
                 Platform.exit();
@@ -110,6 +112,7 @@ public class Main extends Application {
 
     private void inputHandlers() {
         tfInput.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
             public void handle(KeyEvent event) {
                 if (GAME_MODE == MAIN_MENU) {
                     if (tfInput.getText().equals(singleCommand)) {
@@ -214,6 +217,7 @@ public class Main extends Application {
 
                                 try {
                                     joinLobby(l.getText());
+                                    lobbyName=l.getText();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -251,10 +255,10 @@ public class Main extends Application {
                 }
                 if(GAME_MODE == MULTI_PLAYING){
                     activeLabel = null;
-                    if(labels.size()>=1){
+                    try {
                         activeLabel = labels.get(0);
-                    } else{
-                        activeLabel = null;
+                    } catch (Exception e) {
+                        System.out.println("LOL");
                     }
                     if (activeLabel == null) {
                         return;
@@ -285,6 +289,7 @@ public class Main extends Application {
     }
 
     private void injectOpponents() throws IOException {
+//        clientSocket.broadcastMessage("WORD:");
         clientSocket.broadcastMessage("WORD:"+lobbyName);
     }
 
@@ -389,7 +394,12 @@ public class Main extends Application {
     }
 
     private void createMultiPlayingLayout() {
-        gamePane.getChildren().clear();
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                gamePane.getChildren().clear();
+            }
+        });
         labels.clear();
 
         startMultiPlayerGame();
@@ -401,14 +411,16 @@ public class Main extends Application {
 
         spawning = new Timer();
         spawning.scheduleAtFixedRate(new TimerTask() {
+            @Override
             public void run() {
                 String s = lines[new Random().nextInt(lines.length)];
-                final Label label = new Label(s);
+                Label label = new Label(s);
                 label.setLayoutX(0);
                 label.setLayoutY(0);
                 label.setStyle("-fx-text-fill:#FF0000;");
                 labels.add(label);
                 Platform.runLater(new Runnable() {
+                    @Override
                     public void run() {
                         gamePane.getChildren().add(label);
 
@@ -419,6 +431,7 @@ public class Main extends Application {
 
         dropping = new Timer();
         dropping.scheduleAtFixedRate(new TimerTask() {
+            @Override
             public void run() {
                 Label labelToRemove = null;
                 for (Label label : labels) {
@@ -427,7 +440,7 @@ public class Main extends Application {
                         playerLimit -= 20;
                         playerLives--;
                     } else {
-                        label.setLayoutY(label.getLayoutY() + 20);
+                        label.setLayoutY(label.getLayoutY()+20);
                     }
                 }
                 if (labelToRemove != null) {
@@ -485,18 +498,14 @@ public class Main extends Application {
         createMainMenuItem(exit, 2);
     }
 
-    private void createMainMenuItem(final Label node, int position) {
+    private void createMainMenuItem(Label node, int position) {
 
         node.setLayoutX(50);
         node.setLayoutY(100 + position * 20);
 
         node.setStyle("-fx-text-fill: #FF0000;");
 
-        Platform.runLater(new Runnable() {
-            public void run() {
-                gamePane.getChildren().add(node);
-            }
-        });
+        gamePane.getChildren().add(node);
     }
 
     private void createSinglePlayerLayout() {
@@ -515,12 +524,13 @@ public class Main extends Application {
             @Override
             public void run() {
                 String s = lines[new Random().nextInt(lines.length)];
-                final Label label = new Label(s);
+                Label label = new Label(s);
                 label.setLayoutX(0);
                 label.setLayoutY(0);
                 label.setStyle("-fx-text-fill:#FF0000;");
                 labels.add(label);
                 Platform.runLater(new Runnable() {
+                    @Override
                     public void run() {
                         gamePane.getChildren().add(label);
 
@@ -560,11 +570,12 @@ public class Main extends Application {
     private void singlePlayerGameOver() {
         spawning.cancel();
         dropping.cancel();
-        final Label label = new Label("game over :(");
+        Label label = new Label("game over :(");
         label.setStyle("-fx-text-fill: #FF0000; -fx-font-size: 24");
         label.setLayoutX(50);
         label.setLayoutY(100);
         Platform.runLater(new Runnable() {
+            @Override
             public void run() {
                 gamePane.getChildren().add(label);
             }
@@ -579,6 +590,7 @@ public class Main extends Application {
                 if (counter == 3) {
                     GAME_MODE = MAIN_MENU;
                     Platform.runLater(new Runnable() {
+                        @Override
                         public void run() {
                             checkMode();
                             tfInput.setText("");
@@ -597,12 +609,8 @@ public class Main extends Application {
 
     public void notifyHostClientEntered(String newPlayer) {
         if(GAME_MODE == MULTI_WAITING){
-            final Label waitingLabel = (Label) gamePane.getChildren().get(0);
-            Platform.runLater(new Runnable() {
-                public void run() {
-                    waitingLabel.setText("start();");
-                }
-            });
+            Label waitingLabel = (Label) gamePane.getChildren().get(0);
+            waitingLabel.setText("start();");
             Label player2 = new Label(newPlayer+" joined the lobby");
             player2.setStyle("-fx-text-fill:#00FF00;");
             createMainMenuItem(player2,gamePane.getChildren().size());
@@ -638,7 +646,7 @@ public class Main extends Application {
     }
 
     public void getInjected(Integer lineNumber) {
-        final Label injectedLabel = new Label(lines[lineNumber]);
+        Label injectedLabel = new Label(lines[lineNumber]);
         injectedLabel.setStyle("-fx-text-fill:#FF0000;");
         for(Label l : labels){
             if(l.getLayoutY() == 0){
@@ -647,10 +655,46 @@ public class Main extends Application {
             }
         }
         Platform.runLater(new Runnable() {
+            @Override
             public void run() {
                 gamePane.getChildren().add(injectedLabel);
             }
         });
         labels.add(injectedLabel);
+    }
+
+    public void win() {
+        spawning.cancel();
+        dropping.cancel();
+        Label label = new Label("VICTORIOUS :)");
+        label.setStyle("-fx-text-fill: #00FF00; -fx-font-size: 24");
+        label.setLayoutX(50);
+        label.setLayoutY(100);
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                gamePane.getChildren().add(label);
+            }
+        });
+        Timer t = new Timer();
+        t.scheduleAtFixedRate(new TimerTask() {
+            int counter = 0;
+
+            @Override
+            public void run() {
+                counter++;
+                if (counter == 3) {
+                    GAME_MODE = MAIN_MENU;
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            checkMode();
+                            tfInput.setText("");
+                        }
+                    });
+                    this.cancel();
+                }
+            }
+        }, 0, 2500);
     }
 }

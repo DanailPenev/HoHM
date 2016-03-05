@@ -1,3 +1,5 @@
+package sample;
+
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -5,6 +7,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -13,13 +16,14 @@ import java.util.concurrent.TimeUnit;
  * Created by Danail on 3/5/2016.
  */
 @WebSocket(maxTextMessageSize = 64 * 1024)
-public class SimpleEchoSocket {
+public class ClientSocket {
     private final CountDownLatch closeLatch;
-
+    private String username;
     @SuppressWarnings("unused")
     private Session session;
 
-    public SimpleEchoSocket() {
+    public ClientSocket(String username) {
+        this.username = username;
         this.closeLatch = new CountDownLatch(1);
     }
 
@@ -40,12 +44,11 @@ public class SimpleEchoSocket {
         this.session = session;
         try {
             Future<Void> fut;
-            fut = session.getRemote().sendStringByFuture("Hello");
+            fut = session.getRemote().sendStringByFuture("NAME:"+username);
             fut.get(2, TimeUnit.SECONDS);
-            fut = session.getRemote().sendStringByFuture("Thanks for the conversation.");
-            fut.get(2, TimeUnit.SECONDS);
-            session.close(StatusCode.NORMAL, "I'm done");
+//            session.close(StatusCode.NORMAL, "I'm done");
         } catch (Throwable t) {
+            System.out.println("CONNECT ERROR");
             t.printStackTrace();
         }
     }
@@ -54,5 +57,11 @@ public class SimpleEchoSocket {
     public void onMessage(String msg) {
         System.out.printf("Got msg: %s%n", msg);
     }
+
+    public void broadcastMessage(String message) throws IOException {
+        session.getRemote().sendString(message);
+
+    }
+
 }
 

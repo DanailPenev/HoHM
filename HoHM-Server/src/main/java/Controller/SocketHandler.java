@@ -80,7 +80,11 @@ public class SocketHandler {
                 disconnectFrom.removePlayer(user);
                 String userName = HoHMSocket.connectedPlayers.get(user);
                 String messageToSend = userName + " disconnected from the lobby!";
-                broadcastToAllInALobby(user, disconnectFrom.getId(), messageToSend);
+                if(disconnectFrom.getPlayers().size() > 0){
+                    broadcastToAllInALobby(user, disconnectFrom.getId(), messageToSend);
+                } else{
+                    ServerController.availableLobbies.remove(disconnectFrom);
+                }
             }
         }
         //handler for sending lines over to the opponent

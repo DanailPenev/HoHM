@@ -672,7 +672,12 @@ public class Main extends Application {
                 }
             }
             if(toRemove != null) {
-                gamePane.getChildren().remove(toRemove);
+                final Label finalToRemove = toRemove;
+                Platform.runLater(new Runnable() {
+                    public void run() {
+                        gamePane.getChildren().remove(finalToRemove);
+                    }
+                });
             }
         }
     }

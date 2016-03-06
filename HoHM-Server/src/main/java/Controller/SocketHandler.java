@@ -36,13 +36,10 @@ public class SocketHandler {
     public void onClose(Session user, int statusCode, String reason) {
         System.out.println("Disconnected ");
         for (Lobby l : ServerController.availableLobbies){
-            if (l.getPlayers().remove(user)){
-//                l.removePlayer(user);
-                System.out.println(l.getPlayers().size());
+            if (l.removePlayer(user)){
                 broadcastToAll(l.getId(),"LEFT:"+HoHMSocket.connectedPlayers.get(user));
-                if (l.getPlayers().size()<1){
-                    ServerController.availableLobbies.remove(l);
-                }
+                Lobby.checkToDestroy(l);
+                break;
             }
         }
         HoHMSocket.connectedPlayers.remove(user);
@@ -71,8 +68,8 @@ public class SocketHandler {
         //handler for starting a game/lobby
         else if(messageKey.equals("STRT:")){
             String lobbyName = message.substring(5);
-            String lobbyID = Lobby.findLobbyByName(lobbyName).getId();
-            if(!lobbyName.equals("") && lobbyName != null){
+            if(!lobbyName.equals("")){
+                String lobbyID = Lobby.findLobbyByName(lobbyName).getId();
                 broadcastToAllInALobby(user, lobbyID, "EXEC:");
                 Game.startGame(lobbyName);
             }
@@ -82,20 +79,17 @@ public class SocketHandler {
             String lobbyName = message.substring(5);
             if(!lobbyName.equals("")){
                 for (Lobby l : Game.activeLobbies){
-                    try{
                     for (Session s : l.getPlayers()){
                         if (user.equals(s)){
                             l.removePlayer(user);
                             System.out.println(l.getPlayers().size());
+                            //check for winner
+                            if (l.getPlayers().size()<2) {
+                                broadcastMessageTo(l.getPlayers().get(0), "VICT:");
+                                Game.endGame(lobbyName);
+                            }
+                            return;
                         }
-                    }
-                    } catch (Exception e){
-                        System.out.println("LOSHO");
-                    }
-                    System.out.println(l.getPlayers().size()+" PLAYAS");
-                    if (l.getPlayers().size()<2) {
-                        broadcastMessageTo(l.getPlayers().get(0), "VICT:");
-                        Game.endGame(lobbyName);
                     }
                 }
             }
@@ -111,7 +105,6 @@ public class SocketHandler {
                 broadcastToAllInALobby(user, connectedTo.getId(), messageToSend);
             }
         }
-
         //handler for sending lines over to the opponent
         else if(messageKey.equals("WORD:")){
             String lobbyName = message.substring(5);

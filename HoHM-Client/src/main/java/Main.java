@@ -154,7 +154,7 @@ public class Main extends Application {
                     if (tfInput.getText().equals(activeLabel.getText())) {
                         activeLabel.setStyle("-fx-text-fill:#00FF00");
                         if (event.getCode().equals(KeyCode.ENTER)) {
-                            labels.remove(activeLabel);
+                            synchronized (labels){labels.remove(activeLabel);}
                             gamePane.getChildren().remove(activeLabel);
                             tfInput.setText("");
 
@@ -264,7 +264,7 @@ public class Main extends Application {
                     if (tfInput.getText().equals(activeLabel.getText())) {
                         activeLabel.setStyle("-fx-text-fill:#00FF00");
                         if (event.getCode().equals(KeyCode.ENTER)) {
-                            labels.remove(activeLabel);
+                            synchronized (labels){labels.remove(activeLabel);}
                             gamePane.getChildren().remove(activeLabel);
                             tfInput.setText("");
                             cccccOMBO++;
@@ -348,7 +348,7 @@ public class Main extends Application {
     }
 
     private void host() {
-        destUri = "ws://localhost:421";
+        destUri = "ws://25.82.76.49:421";
         webSocketClient = new WebSocketClient();
         clientSocket = new ClientSocket(username,this);
         try {
@@ -438,7 +438,7 @@ public class Main extends Application {
                     }
                 }
                 if (labelToRemove != null) {
-                    labels.remove(labelToRemove);
+                    synchronized (labels){labels.remove(activeLabel);}
                     labelToRemove.setStyle("-fx-text-fill:#660000;");
                 }
 
@@ -589,7 +589,7 @@ public class Main extends Application {
                     }
                 }
                 if (labelToRemove != null) {
-                    labels.remove(labelToRemove);
+                    synchronized (labels){labels.remove(activeLabel);}
                     labelToRemove.setStyle("-fx-text-fill:#660000;");
                 }
 

@@ -89,11 +89,13 @@ public class SocketHandler {
                             System.out.println(l.getPlayers().size());
                         }
                     }
+                    } catch (Exception e){
+                        System.out.println("LOSHO");
+                    }
+                    System.out.println(l.getPlayers().size()+" PLAYAS");
                     if (l.getPlayers().size()<2) {
                         broadcastMessageTo(l.getPlayers().get(0), "VICT:");
                         Game.endGame(lobbyName);
-                    }} catch (Exception e){
-                        System.out.println("LOSHO");
                     }
                 }
             }
@@ -109,21 +111,7 @@ public class SocketHandler {
                 broadcastToAllInALobby(user, connectedTo.getId(), messageToSend);
             }
         }
-        //handler for disconnecting from the lobby
-//        else if(messageKey.equals("DISC:")){
-//            String lobbyToDisconnectName = message.substring(5);
-//            Lobby disconnectFrom = Game.getLobby(lobbyToDisconnectName);
-//            if (disconnectFrom != null) {
-//                disconnectFrom.removePlayer(user);
-//                String userName = HoHMSocket.connectedPlayers.get(user);
-//                String messageToSend = sendDCedKeyword+userName;
-//                if(disconnectFrom.getPlayers().size() > 0){
-//                    broadcastToAllInALobby(user, disconnectFrom.getId(), messageToSend);
-//                } else {
-//                    ServerController.availableLobbies.remove(disconnectFrom);
-//                }
-//            }
-//        }
+
         //handler for sending lines over to the opponent
         else if(messageKey.equals("WORD:")){
             String lobbyName = message.substring(5);

@@ -31,12 +31,6 @@ public class Lobby {
         ++idCounter;
     }
 
-    public Lobby(String lobbyName, String idLobby, ArrayList<Session> players){
-        this.lobbyName = lobbyName;
-        this.idLobby = idLobby;
-        this.players = players;
-    }
-
     public static Lobby tryToConnect(String lobbyName){
         Lobby connectedTo = null;
         for (Lobby l : ServerController.availableLobbies){
@@ -69,8 +63,18 @@ public class Lobby {
         players.add(sender);
     }
 
-    public void removePlayer(Session sender){
-        players.remove(sender);
+    public boolean removePlayer(Session sender){
+        if(players.remove(sender)){
+            return true;
+        }
+        return false;
+    }
+
+    public static void checkToDestroy(Lobby l){
+        if (l.getPlayers().size() < 1){
+            ServerController.availableLobbies.remove(l);
+            Game.activeLobbies.remove(l);
+        }
     }
 
     public ArrayList<Session> getPlayers(){

@@ -59,6 +59,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
+
+
         TextInputDialog dialog = new TextInputDialog("walter");
         dialog.setTitle("Text Input Dialog");
         dialog.setHeaderText("Set up your profile");
@@ -449,7 +452,7 @@ public class Main extends Application {
                     }
                 }
                 if (labelToRemove != null) {
-                    synchronized (labels){labels.remove(activeLabel);}
+                    synchronized (labels){labels.remove(labelToRemove);}
                     labelToRemove.setStyle("-fx-text-fill:#660000;");
                 }
 
@@ -473,6 +476,7 @@ public class Main extends Application {
     private void multiPlayerGameOver() throws IOException {
         spawning.cancel();
         dropping.cancel();
+        Sound.onLose();
         clientSocket.broadcastMessage("ENDG:"+lobbyName);
         final Label label = new Label("game over :(");
         label.setStyle("-fx-text-fill: #FF0000; -fx-font-size: 24");
@@ -573,6 +577,8 @@ public class Main extends Application {
             public void run() {
                 String s = lines[new Random().nextInt(lines.length)];
                 final Label label = new Label(s);
+                label.setMaxHeight(20);
+                label.setMinHeight(20);
                 label.setLayoutX(0);
                 label.setLayoutY(0);
                 label.setStyle("-fx-text-fill:#FF0000;");
@@ -601,8 +607,10 @@ public class Main extends Application {
         dropping.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 Label labelToRemove = null;
+                synchronized (labels){
                 for (Label label : labels) {
                     if (label.getLayoutY() >= playerLimit) {
+                        System.out.println(playerLimit+ " "+playerLives+" "+label.getText());
                         labelToRemove = label;
                         playerLimit -= 20;
                         playerLives--;
@@ -611,8 +619,9 @@ public class Main extends Application {
                     }
                 }
                 if (labelToRemove != null) {
-                    synchronized (labels){labels.remove(activeLabel);}
-                    labelToRemove.setStyle("-fx-text-fill:#660000;");
+                    System.out.println(labels);
+                    labelToRemove.setStyle("-fx-text-fill:#660000;");labels.remove(labelToRemove);}
+
                 }
 
                 if (playerLives <= 0) {
@@ -627,6 +636,7 @@ public class Main extends Application {
     private void singlePlayerGameOver() {
         spawning.cancel();
         dropping.cancel();
+        Sound.onLose();
         final Label label = new Label("game over :(");
         label.setStyle("-fx-text-fill: #FF0000; -fx-font-size: 24");
         label.setLayoutX(50);
@@ -667,6 +677,7 @@ public class Main extends Application {
             final Label waitingLabel = (Label) gamePane.getChildren().get(0);
             Platform.runLater(new Runnable() {
                 public void run() {
+                    Sound.onEnter();
                     waitingLabel.setText("start();");
                     Label player2 = new Label(newPlayer+" joined the lobby");
                     player2.setStyle("-fx-text-fill:#00FF00;");
@@ -737,6 +748,7 @@ public class Main extends Application {
     public void win() {
         spawning.cancel();
         dropping.cancel();
+        Sound.onWin();
         final Label label = new Label("VICTORIOUS :)");
         label.setStyle("-fx-text-fill: #00FF00; -fx-font-size: 24");
         label.setLayoutX(50);

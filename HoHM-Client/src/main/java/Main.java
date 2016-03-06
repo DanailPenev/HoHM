@@ -748,7 +748,7 @@ public class Main extends Application {
                     singlePlayerGameOver();
                 }
             }
-        }, 0, 4000);
+        }, 0, 2000);
 
 
     }
@@ -842,7 +842,7 @@ public class Main extends Application {
     }
 
     public void getInjected(Integer lineNumber) {
-        final Label injectedLabel = new Label(lines[lineNumber]);
+        final Label injectedLabel = new Label(realSnipetts.get(lineNumber));
         injectedLabel.setStyle("-fx-text-fill:#FF0000;");
 
         Platform.runLater(new Runnable() {

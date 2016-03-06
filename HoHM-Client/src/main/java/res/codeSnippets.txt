@@ -1,0 +1,30 @@
+#include "debug/debugcpu.h"
+inline std::string number_and_format::format() const
+c++;
+int a = 100;
+template<class _ObjectClass>
+class object_finder_base : public finder_base{}
+#include <cassert>
+using dependency::MakefileDependencyInfo;
+if (!currentOutput.empty()) {}
+return 0;
+def __init__(self, image_file, location):
+class Menu_bg(pygame.sprite.Sprite):
+print "Hello World!"
+first = [1,2,3][0]
+for i in dictionary:
+while True:
+print sum(range(0, 420))
+print "This is a 'string' inside of another 'string'"
+return (string[0:2], string[2:5])
+from string import *
+String gameRoom = message.substring(5);
+catch (IOException e){}
+public static void main(String[] args)
+boolean flag = false;
+public class MyClass{}
+Cat cat = new Cat;
+private final String sting = "Icon"
+System.out.println("It is happening!")
+return null;
+catch (NullPointerException e){}

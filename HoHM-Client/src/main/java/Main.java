@@ -17,9 +17,7 @@ import javafx.stage.WindowEvent;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
 import java.util.*;
 
@@ -29,7 +27,7 @@ public class Main extends Application {
     private final String singleCommand = "single";
     private final String multiCommand = "multi";
 
-    Label single, multi, exit, host, join;
+    Label single, multi, exit, host, join, chooseLanguage, chooseSpeed, startSingleGame;
 
 
     Pane gamePane;
@@ -39,10 +37,13 @@ public class Main extends Application {
     WebSocketClient webSocketClient;
     ClientSocket clientSocket;
 
-    String[] lines = {"qwe1", "asd2", "zxc3","rty4","fgh5","vbn6","uio7","jkl8","m,.9","p[]0"};
+    String[] lines = {"qwe1", "asd2", "zxc3", "rty4", "fgh5", "vbn6", "uio7", "jkl8", "m,.9", "p[]0"};
 
-    final int MAIN_MENU = 0, SINGLE_PLAYER = 1, MULTI_MENU = 2, MULTI_WAITING = 3, MULTI_JOINING = 4, MULTI_PLAYING = 5;
+    final int MAIN_MENU = 0, SINGLE_MENU = 1, SINGLE_PLAYER = 2, MULTI_MENU = 3, MULTI_WAITING = 4, MULTI_JOINING = 5,
+            MULTI_PLAYING = 6;
+    final int MIXED = 0, CPP = 1, PYTHON = 2, JAVA = 3;
     int GAME_MODE;
+    int CHOSEN_LANGUAGE = MIXED;
 
     ArrayList<Label> labels;
     Label activeLabel;
@@ -51,14 +52,18 @@ public class Main extends Application {
 
     int playerLives, playerLimit;
 
-    String username, destUri, lobbyName="";
+    String username, destUri, lobbyName = "";
 
     boolean isHost = false;
 
     int cccccOMBO = 0;
 
+    private ArrayList<String> realSnipetts;
+
     @Override
     public void start(Stage primaryStage) throws Exception {
+        realSnipetts = new ArrayList<String>();
+        populateArrayOfSnippets();
         TextInputDialog dialog = new TextInputDialog("walter");
         dialog.setTitle("Text Input Dialog");
         dialog.setHeaderText("Set up your profile");
@@ -109,6 +114,28 @@ public class Main extends Application {
 
     }
 
+    private void populateArrayOfSnippets() {
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                realSnipetts = new ArrayList<String>();
+                try {
+                    File f = new File("src\\main\\java\\res\\codeSnippets.txt");
+                    FileReader ff = new FileReader(f);
+                    BufferedReader br = new BufferedReader(ff);
+                    String currentLine;
+                    while ((currentLine = br.readLine()) != null) {
+                        realSnipetts.add(currentLine);
+                    }
+                    System.out.println("Buffer Done");
+                    br.close();
+                } catch (IOException e) {
+                    System.out.println("Buffer issues");
+                }
+            }
+        });
+        t.start();
+    }
+
     private void inputHandlers() {
         tfInput.setOnKeyReleased(new EventHandler<KeyEvent>() {
             public void handle(KeyEvent event) {
@@ -116,7 +143,7 @@ public class Main extends Application {
                     if (tfInput.getText().equals(singleCommand)) {
                         single.setStyle("-fx-text-fill: #00FF00;");
                         if (event.getCode().equals(KeyCode.ENTER)) {
-                            GAME_MODE = SINGLE_PLAYER;
+                            GAME_MODE = SINGLE_MENU;
                             tfInput.setText("");
                             gamePane.getChildren().clear();
                             checkMode();
@@ -141,6 +168,51 @@ public class Main extends Application {
                     }
                 }
 
+                if (GAME_MODE == SINGLE_MENU) {
+                    if (tfInput.getText().equals("back();")) {
+                        tfInput.setText("");
+                        GAME_MODE = MAIN_MENU;
+                        checkMode();
+                    }
+                    else if(tfInput.getText().equals("language(\"MIXED\")")){
+                        chooseLanguage.setStyle("-fx-text-fill:#00FF00");
+                        if (event.getCode().equals(KeyCode.ENTER)){
+                            CHOSEN_LANGUAGE = MIXED;
+                            chooseLanguage.setText("language(\"MIXED\")");
+                        }
+                    }else if(tfInput.getText().equals("language(\"CPP\")")){
+                        chooseLanguage.setStyle("-fx-text-fill:#00FF00");
+                        if (event.getCode().equals(KeyCode.ENTER)){
+                            CHOSEN_LANGUAGE = CPP;
+                            chooseLanguage.setText("C++");
+                        }
+                    }else if(tfInput.getText().equals("language(\"PYTHON\")")){
+                        chooseLanguage.setStyle("-fx-text-fill:#00FF00");
+                        if (event.getCode().equals(KeyCode.ENTER)){
+                            CHOSEN_LANGUAGE = PYTHON;
+                            chooseLanguage.setText("language(\"PYTHON\")");
+
+                        }
+                    }else if(tfInput.getText().equals("language(\"JAVA\")")){
+                        chooseLanguage.setStyle("-fx-text-fill:#00FF00");
+                        if (event.getCode().equals(KeyCode.ENTER)){
+                            CHOSEN_LANGUAGE = JAVA;
+                            chooseLanguage.setText("language(\"JAVA\")");
+                        }
+                    } else if (tfInput.getText().equals(startSingleGame.getText())) {
+                        startSingleGame.setStyle("-fx-text-fill:#00FF00");
+                        if (event.getCode().equals(KeyCode.ENTER)) {
+                            tfInput.setText("");
+                            GAME_MODE = SINGLE_PLAYER;
+                            checkMode();
+                        }
+                    } else {
+                        startSingleGame.setStyle("-fx-text-fill:#FF0000;");
+                        chooseSpeed.setStyle("-fx-text-fill:#FF0000;");
+                        chooseLanguage.setStyle("-fx-text-fill:#FF0000;");
+                    }
+                }
+
                 if (GAME_MODE == SINGLE_PLAYER) {
                     activeLabel = null;
                     try {
@@ -154,7 +226,9 @@ public class Main extends Application {
                     if (tfInput.getText().equals(activeLabel.getText())) {
                         activeLabel.setStyle("-fx-text-fill:#00FF00");
                         if (event.getCode().equals(KeyCode.ENTER)) {
-                            synchronized (labels){labels.remove(activeLabel);}
+                            synchronized (labels) {
+                                labels.remove(activeLabel);
+                            }
                             gamePane.getChildren().remove(activeLabel);
                             tfInput.setText("");
 
@@ -207,7 +281,7 @@ public class Main extends Application {
                     for (Node n : gamePane.getChildren()) {
                         labelsArray.add((Label) n);
                     }
-                    for(Label l : labelsArray) {
+                    for (Label l : labelsArray) {
                         if (tfInput.getText().equals(l.getText())) {
                             l.setStyle("-fx-text-fill:#00FF00;");
                             if (event.getCode().equals(KeyCode.ENTER)) {
@@ -215,7 +289,7 @@ public class Main extends Application {
 
                                 try {
                                     joinLobby(l.getText());
-                                    lobbyName=l.getText();
+                                    lobbyName = l.getText();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -228,14 +302,14 @@ public class Main extends Application {
                         }
                     }
                 }
-                if(GAME_MODE == MULTI_WAITING){
-                    if(isHost){
+                if (GAME_MODE == MULTI_WAITING) {
+                    if (isHost) {
                         Label start = (Label) gamePane.getChildren().get(0);
-                        if(tfInput.getText().equals(start.getText())){
+                        if (tfInput.getText().equals(start.getText())) {
                             start.setStyle("-fx-text-fill:#00FF00;");
-                            if(event.getCode().equals(KeyCode.ENTER)){
+                            if (event.getCode().equals(KeyCode.ENTER)) {
                                 try {
-                                    clientSocket.broadcastMessage("STRT:"+lobbyName);
+                                    clientSocket.broadcastMessage("STRT:" + lobbyName);
                                 } catch (IOException e) {
                                     System.out.println("STARTING MULTI ERROR");
                                     e.printStackTrace();
@@ -244,14 +318,13 @@ public class Main extends Application {
                                 GAME_MODE = MULTI_PLAYING;
                                 checkMode();
                             }
-                        }
-                        else{
+                        } else {
                             start.setStyle("-fx-text-fill:#FF0000;");
                         }
                     }
 
                 }
-                if(GAME_MODE == MULTI_PLAYING){
+                if (GAME_MODE == MULTI_PLAYING) {
                     activeLabel = null;
                     try {
                         activeLabel = labels.get(0);
@@ -264,11 +337,13 @@ public class Main extends Application {
                     if (tfInput.getText().equals(activeLabel.getText())) {
                         activeLabel.setStyle("-fx-text-fill:#00FF00");
                         if (event.getCode().equals(KeyCode.ENTER)) {
-                            synchronized (labels){labels.remove(activeLabel);}
+                            synchronized (labels) {
+                                labels.remove(activeLabel);
+                            }
                             gamePane.getChildren().remove(activeLabel);
                             tfInput.setText("");
                             cccccOMBO++;
-                            if(cccccOMBO == 3){
+                            if (cccccOMBO == 3) {
                                 try {
                                     injectOpponents();
                                 } catch (IOException e) {
@@ -288,7 +363,7 @@ public class Main extends Application {
 
     private void injectOpponents() throws IOException {
 //        clientSocket.broadcastMessage("WORD:");
-        clientSocket.broadcastMessage("WORD:"+lobbyName);
+        clientSocket.broadcastMessage("WORD:" + lobbyName);
     }
 
     private void joinLobby(String lobbyName) throws IOException {
@@ -298,7 +373,7 @@ public class Main extends Application {
     private void connectAndSeeLobbies() throws IOException {
         destUri = "ws://25.82.76.49:421";
         webSocketClient = new WebSocketClient();
-        clientSocket = new ClientSocket(username,this);
+        clientSocket = new ClientSocket(username, this);
         try {
             webSocketClient.start();
             URI uri = new URI(destUri);
@@ -350,7 +425,7 @@ public class Main extends Application {
     private void host() {
         destUri = "ws://25.82.76.49:421";
         webSocketClient = new WebSocketClient();
-        clientSocket = new ClientSocket(username,this);
+        clientSocket = new ClientSocket(username, this);
         try {
             webSocketClient.start();
             URI uri = new URI(destUri);
@@ -377,8 +452,10 @@ public class Main extends Application {
     private void checkMode() {
         if (GAME_MODE == MAIN_MENU) {
             createMainMenuLayout();
+        } else if (GAME_MODE == SINGLE_MENU) {
+            createSingleMenuLayout();
         } else if (GAME_MODE == SINGLE_PLAYER) {
-            createSinglePlayerLayout();
+            createSinglePlayerGameLayout();
         } else if (GAME_MODE == MULTI_MENU) {
             createMultiMenuLayout();
         } else if (GAME_MODE == MULTI_WAITING) {
@@ -409,7 +486,13 @@ public class Main extends Application {
         spawning = new Timer();
         spawning.scheduleAtFixedRate(new TimerTask() {
             public void run() {
-                String s = lines[new Random().nextInt(lines.length)];
+                String s;
+                if (realSnipetts.size() > 1) {
+                    s = realSnipetts.get(new Random().nextInt(realSnipetts.size()));
+                }
+                else {
+                    s = lines[new Random().nextInt(lines.length)];
+                }
                 final Label label = new Label(s);
                 label.setLayoutX(0);
                 label.setLayoutY(0);
@@ -418,14 +501,14 @@ public class Main extends Application {
                 Platform.runLater(new Runnable() {
                     public void run() {
                         gamePane.getChildren().add(label);
-                        for(int i=0;i<gamePane.getChildren().size();i++){
-                            if(gamePane.getChildren().size() == 1 ){
+                        for (int i = 0; i < gamePane.getChildren().size(); i++) {
+                            if (gamePane.getChildren().size() == 1) {
                                 break;
                             }
-                            if(gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i+1).getLayoutY()){
-                                gamePane.getChildren().get(i+1).setLayoutY(gamePane.getChildren().get(i+1).getLayoutY()+20);
+                            if (gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i + 1).getLayoutY()) {
+                                gamePane.getChildren().get(i + 1).setLayoutY(gamePane.getChildren().get(i + 1).getLayoutY() + 20);
                             }
-                            if( i == gamePane.getChildren().size()-2 ){
+                            if (i == gamePane.getChildren().size() - 2) {
                                 break;
                             }
                         }
@@ -433,23 +516,26 @@ public class Main extends Application {
                     }
                 });
             }
-        }, 0, 1000);
+        }, 0, 3500);
 
         dropping = new Timer();
         dropping.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 Label labelToRemove = null;
-                for (Label label : labels) {
-                    if (label.getLayoutY() >= playerLimit) {
-                        labelToRemove = label;
-                        playerLimit -= 20;
-                        playerLives--;
-                    } else {
-                        label.setLayoutY(label.getLayoutY()+20);
+
+                synchronized (labels) {
+                    for (Label label : labels) {
+                        if (label.getLayoutY() >= playerLimit) {
+                            labelToRemove = label;
+                            playerLimit -= 20;
+                            playerLives--;
+                        } else {
+                            label.setLayoutY(label.getLayoutY() + 20);
+                        }
                     }
-                }
-                if (labelToRemove != null) {
-                    synchronized (labels){labels.remove(activeLabel);}
+                    if (labelToRemove != null) {
+                        labels.remove(labelToRemove);
+                    }
                     labelToRemove.setStyle("-fx-text-fill:#660000;");
                 }
 
@@ -461,11 +547,7 @@ public class Main extends Application {
                     }
                 }
             }
-        }, 0, 250);
-
-
-
-
+        }, 0, 1000);
 
 
     }
@@ -473,7 +555,6 @@ public class Main extends Application {
     private void multiPlayerGameOver() throws IOException {
         spawning.cancel();
         dropping.cancel();
-        clientSocket.broadcastMessage("ENDG:"+lobbyName);
         final Label label = new Label("game over :(");
         label.setStyle("-fx-text-fill: #FF0000; -fx-font-size: 24");
         label.setLayoutX(50);
@@ -502,8 +583,9 @@ public class Main extends Application {
                 }
             }
         }, 0, 2500);
-    }
 
+        clientSocket.broadcastMessage("ENDG:" + lobbyName);
+    }
 
 
     private void createMultiJoiningLayout() {
@@ -548,7 +630,9 @@ public class Main extends Application {
         node.setLayoutX(50);
         node.setLayoutY(100 + position * 20);
 
-        node.setStyle("-fx-text-fill: #FF0000;");
+        if(node.getStyle().equals("")){
+            node.setStyle("-fx-text-fill: #FF0000;");
+        }
 
         Platform.runLater(new Runnable() {
             public void run() {
@@ -557,7 +641,30 @@ public class Main extends Application {
         });
     }
 
-    private void createSinglePlayerLayout() {
+    private void createSingleMenuLayout() {
+        gamePane.getChildren().clear();
+        labels.clear();
+        //c++
+        //python
+        //java
+        Label langTip  = new Label("//MIXED, C++, PYTHON, JAVA");
+        langTip.setStyle("-fx-text-fill:#666666;");
+        chooseLanguage = new Label("language(\"MIXED\")");
+
+        Label speedTip  = new Label("//SLOW, MEDIUM, FAST");
+        speedTip.setStyle("-fx-text-fill:#666666;");
+        chooseSpeed = new Label("speed(\"MEDIUM\")");
+
+        startSingleGame = new Label("start()");
+
+        createMainMenuItem(langTip, 0);
+        createMainMenuItem(chooseLanguage, 1);
+        createMainMenuItem(speedTip, 3);
+        createMainMenuItem(chooseSpeed, 4);
+        createMainMenuItem(startSingleGame, 6);
+    }
+
+    private void createSinglePlayerGameLayout() {
         gamePane.getChildren().clear();
         labels.clear();
 
@@ -571,7 +678,21 @@ public class Main extends Application {
         spawning = new Timer();
         spawning.scheduleAtFixedRate(new TimerTask() {
             public void run() {
-                String s = lines[new Random().nextInt(lines.length)];
+                String s;
+                if (realSnipetts.size() > 1) {
+                    int limit = realSnipetts.size();
+                    if(CHOSEN_LANGUAGE != MIXED){
+                        limit = 10;
+                    }
+                    int randomNumber = new Random().nextInt(limit);
+                    if(CHOSEN_LANGUAGE != MIXED){
+                        s = realSnipetts.get(randomNumber + 10*(CHOSEN_LANGUAGE-1));
+                    } else{
+                        s = realSnipetts.get(randomNumber);
+                    }
+                } else {
+                    s = lines[new Random().nextInt(lines.length)];
+                }
                 final Label label = new Label(s);
                 label.setLayoutX(0);
                 label.setLayoutY(0);
@@ -580,14 +701,14 @@ public class Main extends Application {
                 Platform.runLater(new Runnable() {
                     public void run() {
                         gamePane.getChildren().add(label);
-                        for(int i=0;i<gamePane.getChildren().size();i++){
-                            if(gamePane.getChildren().size() == 1 ){
+                        for (int i = 0; i < gamePane.getChildren().size(); i++) {
+                            if (gamePane.getChildren().size() == 1) {
                                 break;
                             }
-                            if(gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i+1).getLayoutY()){
-                                gamePane.getChildren().get(i+1).setLayoutY(gamePane.getChildren().get(i+1).getLayoutY()+20);
+                            if (gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i + 1).getLayoutY()) {
+                                gamePane.getChildren().get(i + 1).setLayoutY(gamePane.getChildren().get(i + 1).getLayoutY() + 20);
                             }
-                            if( i == gamePane.getChildren().size()-2 ){
+                            if (i == gamePane.getChildren().size() - 2) {
                                 break;
                             }
                         }
@@ -595,31 +716,35 @@ public class Main extends Application {
                     }
                 });
             }
-        }, 0, 1000);
+        }, 0, 3500);
 
         dropping = new Timer();
         dropping.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 Label labelToRemove = null;
-                for (Label label : labels) {
-                    if (label.getLayoutY() >= playerLimit) {
-                        labelToRemove = label;
-                        playerLimit -= 20;
-                        playerLives--;
-                    } else {
-                        label.setLayoutY(label.getLayoutY() + 20);
+
+                synchronized (labels) {
+                    for (Label label : labels) {
+                        if (label.getLayoutY() >= playerLimit) {
+                            labelToRemove = label;
+                            playerLimit -= 20;
+                            playerLives--;
+                            tfInput.setText("");
+                        } else {
+                            label.setLayoutY(label.getLayoutY() + 20);
+                        }
                     }
-                }
-                if (labelToRemove != null) {
-                    synchronized (labels){labels.remove(activeLabel);}
-                    labelToRemove.setStyle("-fx-text-fill:#660000;");
+                    if (labelToRemove != null) {
+                        labels.remove(labelToRemove);
+                        labelToRemove.setStyle("-fx-text-fill:#660000;");
+                    }
                 }
 
                 if (playerLives <= 0) {
                     singlePlayerGameOver();
                 }
             }
-        }, 0, 250);
+        }, 0, 1000);
 
 
     }
@@ -663,14 +788,14 @@ public class Main extends Application {
     }
 
     public void notifyHostClientEntered(final String newPlayer) {
-        if(GAME_MODE == MULTI_WAITING){
+        if (GAME_MODE == MULTI_WAITING) {
             final Label waitingLabel = (Label) gamePane.getChildren().get(0);
             Platform.runLater(new Runnable() {
                 public void run() {
                     waitingLabel.setText("start();");
-                    Label player2 = new Label(newPlayer+" joined the lobby");
+                    Label player2 = new Label(newPlayer + " joined the lobby");
                     player2.setStyle("-fx-text-fill:#00FF00;");
-                    createMainMenuItem(player2,gamePane.getChildren().size());
+                    createMainMenuItem(player2, gamePane.getChildren().size());
                 }
             });
         }
@@ -681,19 +806,19 @@ public class Main extends Application {
     }
 
     public void notifyHostClientLeft(String otherPlayer) {
-        if(GAME_MODE == MULTI_WAITING){
+        if (GAME_MODE == MULTI_WAITING) {
             Label waitingLabel = (Label) gamePane.getChildren().get(0);
-            if(gamePane.getChildren().size() == 1){
+            if (gamePane.getChildren().size() == 1) {
                 waitingLabel.setText("waiting");
             }
             Label toRemove = null;
-            for(Node n : gamePane.getChildren()){
+            for (Node n : gamePane.getChildren()) {
                 Label l = (Label) n;
-                if(l.getText().contains(otherPlayer)){
+                if (l.getText().contains(otherPlayer)) {
                     toRemove = l;
                 }
             }
-            if(toRemove != null) {
+            if (toRemove != null) {
                 final Label finalToRemove = toRemove;
                 Platform.runLater(new Runnable() {
                     public void run() {
@@ -717,14 +842,14 @@ public class Main extends Application {
         Platform.runLater(new Runnable() {
             public void run() {
                 gamePane.getChildren().add(injectedLabel);
-                for(int i=0;i<gamePane.getChildren().size();i++){
-                    if(gamePane.getChildren().size() == 1 ){
+                for (int i = 0; i < gamePane.getChildren().size(); i++) {
+                    if (gamePane.getChildren().size() == 1) {
                         break;
                     }
-                    if(gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i+1).getLayoutY()){
-                        gamePane.getChildren().get(i+1).setLayoutY(gamePane.getChildren().get(i+1).getLayoutY()+20);
+                    if (gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i + 1).getLayoutY()) {
+                        gamePane.getChildren().get(i + 1).setLayoutY(gamePane.getChildren().get(i + 1).getLayoutY() + 20);
                     }
-                    if( i == gamePane.getChildren().size()-2 ){
+                    if (i == gamePane.getChildren().size() - 2) {
                         break;
                     }
                 }

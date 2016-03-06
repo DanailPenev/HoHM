@@ -418,6 +418,17 @@ public class Main extends Application {
                 Platform.runLater(new Runnable() {
                     public void run() {
                         gamePane.getChildren().add(label);
+                        for(int i=0;i<gamePane.getChildren().size();i++){
+                            if(gamePane.getChildren().size() == 1 ){
+                                break;
+                            }
+                            if(gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i+1).getLayoutY()){
+                                gamePane.getChildren().get(i+1).setLayoutY(gamePane.getChildren().get(i+1).getLayoutY()+20);
+                            }
+                            if( i == gamePane.getChildren().size()-2 ){
+                                break;
+                            }
+                        }
 
                     }
                 });
@@ -569,6 +580,17 @@ public class Main extends Application {
                 Platform.runLater(new Runnable() {
                     public void run() {
                         gamePane.getChildren().add(label);
+                        for(int i=0;i<gamePane.getChildren().size();i++){
+                            if(gamePane.getChildren().size() == 1 ){
+                                break;
+                            }
+                            if(gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i+1).getLayoutY()){
+                                gamePane.getChildren().get(i+1).setLayoutY(gamePane.getChildren().get(i+1).getLayoutY()+20);
+                            }
+                            if( i == gamePane.getChildren().size()-2 ){
+                                break;
+                            }
+                        }
 
                     }
                 });
@@ -676,6 +698,7 @@ public class Main extends Application {
                 Platform.runLater(new Runnable() {
                     public void run() {
                         gamePane.getChildren().remove(finalToRemove);
+
                     }
                 });
             }
@@ -690,15 +713,22 @@ public class Main extends Application {
     public void getInjected(Integer lineNumber) {
         final Label injectedLabel = new Label(lines[lineNumber]);
         injectedLabel.setStyle("-fx-text-fill:#FF0000;");
-        for(Label l : labels){
-            if(l.getLayoutY() == 0){
-                l.setLayoutY(20);
-                break;
-            }
-        }
+
         Platform.runLater(new Runnable() {
             public void run() {
                 gamePane.getChildren().add(injectedLabel);
+                for(int i=0;i<gamePane.getChildren().size();i++){
+                    if(gamePane.getChildren().size() == 1 ){
+                        break;
+                    }
+                    if(gamePane.getChildren().get(i).getLayoutY() == gamePane.getChildren().get(i+1).getLayoutY()){
+                        gamePane.getChildren().get(i+1).setLayoutY(gamePane.getChildren().get(i+1).getLayoutY()+20);
+                    }
+                    if( i == gamePane.getChildren().size()-2 ){
+                        break;
+                    }
+                }
+
             }
         });
         labels.add(injectedLabel);

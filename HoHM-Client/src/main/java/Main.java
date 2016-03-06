@@ -20,6 +20,7 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Main extends Application {
 
@@ -45,7 +46,7 @@ public class Main extends Application {
     int GAME_MODE;
     int CHOSEN_LANGUAGE = MIXED;
 
-    ArrayList<Label> labels;
+    CopyOnWriteArrayList<Label> labels;
     Label activeLabel;
 
     Timer spawning, dropping;
@@ -73,7 +74,7 @@ public class Main extends Application {
         username = dialog.showAndWait().get();
         System.out.println(username);
 
-        labels = new ArrayList<Label>();
+        labels = new CopyOnWriteArrayList<Label>();
 
         gamePane = new Pane();
         gamePane.setStyle("-fx-background-color:#000000;");
@@ -535,8 +536,8 @@ public class Main extends Application {
                     }
                     if (labelToRemove != null) {
                         labels.remove(labelToRemove);
+                        labelToRemove.setStyle("-fx-text-fill:#660000;");
                     }
-                    labelToRemove.setStyle("-fx-text-fill:#660000;");
                 }
 
                 if (playerLives <= 0) {
